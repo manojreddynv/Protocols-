@@ -1,9 +1,6 @@
 
-`timescale 1ns / 1ps
-
 module spi_tb;
 
-    // Parameters matching module defaults
     parameter DATA_WIDTH = 8;
     parameter CLK_DIV    = 50;
     parameter CNT_WIDTH  = 6;
@@ -29,10 +26,9 @@ module spi_tb;
     // Simulated Peripheral Internal Registers
     reg [DATA_WIDTH-1:0] slave_tx_data;
     reg [DATA_WIDTH-1:0] slave_rx_data;
+  
 
-    // -----------------------------------------------------------------
-    // Instantiate the Unit Under Test (UUT)
-    // -----------------------------------------------------------------
+    // Instantiate the Unit Under Test
     spi_master #(
         .DATA_WIDTH(DATA_WIDTH),
         .CLK_DIV(CLK_DIV),
@@ -51,23 +47,25 @@ module spi_tb;
         .cs_n(cs_n)
     );
 
-    // -----------------------------------------------------------------
+
+    initial begin
+        $dumpfile("spi_tb.vcd");
+        $dumpvars(0, spi_tb);
+    end
+
+
     // System Clock Generation (100 MHz)
-    // -----------------------------------------------------------------
     initial begin
         clk = 0;
         forever #(CLK_PERIOD / 2) clk = ~clk;
     end
 
-    // -----------------------------------------------------------------
     // Simulated Peripheral Behavior (SPI Mode 0)
-    // - Peripheral samples MOSI on SCLK Rising Edge
-    // - Peripheral shifts MISO on SCLK Falling Edge (or initial CS low)
-    // -----------------------------------------------------------------
+
+    // Load default byte to send back to master when selected
     always @(negedge cs_n) begin
-        // Load default byte to send back to master when selected
-        slave_tx_data <= 8'h3C; 
-        miso          <= 8'h3C >> 7; // Drive MSB immediately on selection
+        slave_tx_data <= 8'h3C;
+        miso          <= 8'h3C >> 7;   // Drive MSB immediately
     end
 
     // Sample MOSI from Master on Rising Edge
@@ -84,34 +82,42 @@ module spi_tb;
             miso          <= slave_tx_data[6];
         end
     end
+  
 
-    // -----------------------------------------------------------------
     // Test Sequence
-    // -----------------------------------------------------------------
     initial begin
+
         // Initialize Inputs
-        rst_n   = 1'b0;
-        start   = 1'b0;
-        tx_data = 8'h00;
-        miso    = 1'b0;
+        rst_n         = 1'b0;
+        start         = 1'b0;
+        tx_data       = 8'h00;
+        miso          = 1'b0;
+        slave_tx_data = 8'h00;
+        slave_rx_data = 8'h00;
 
         // Apply Reset
         #(CLK_PERIOD * 5);
         rst_n = 1'b1;
         #(CLK_PERIOD * 5);
 
-        // --- Test Transaction 1 ---
+      
+        // Test Transaction 1
+   
         $display("[%0t ns] Starting SPI Transfer #1: TX = 0xA5", $time);
-        tx_data = 8'hA5; // Data master will send
+
+        tx_data = 8'hA5;
         start   = 1'b1;
         #(CLK_PERIOD);
         start   = 1'b0;
 
-        // Wait for completion signal
-        wait (done == 1'b1);
+        // Wait until transfer completes
+        wait(done);
+
         $display("[%0t ns] Transfer #1 Complete!", $time);
-        $display("          Master Sent:     0xA5 | Slave Received: 0x%02X", slave_rx_data);
-        $display("          Slave Sent:      0x3C | Master Received: 0x%02X", rx_data);
+        $display("Master Sent     : 0xA5");
+        $display("Slave Received  : 0x%02X", slave_rx_data);
+        $display("Slave Sent      : 0x3C");
+        $display("Master Received : 0x%02X", rx_data);
 
         #(CLK_PERIOD * 20);
 
