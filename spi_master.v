@@ -6,7 +6,6 @@
 //   - Full-duplex: TX and RX happen in the same clock cycle
 //   - Default CLK_DIV=50 => 100MHz sys clk / (2*50) = 1MHz SCLK
 // =====================================================================
-
 module spi_master #(
     parameter DATA_WIDTH = 8,
     parameter CLK_DIV    = 50,          // 100MHz / (2*50) = 1MHz SCLK
@@ -41,7 +40,7 @@ module spi_master #(
     reg                    sclk_d;
     wire                   sclk_rise, sclk_fall;
 
-    // ---- Clock divider for SCLK (idles low -> CPOL=0) ----
+    // Clock divider for SCLK (idles low -> CPOL=0)
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             clk_cnt <= 0;
@@ -61,7 +60,7 @@ module spi_master #(
 
     always @(*) sclk = sclk_r;
 
-    // ---- Registered edge detector (race-free) ----
+    // Registered edge detector
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n)
             sclk_d <= 1'b0;
@@ -72,7 +71,7 @@ module spi_master #(
     assign sclk_rise = sclk_r & ~sclk_d;   // sclk_r just went 0 -> 1 (SAMPLE, CPHA=0)
     assign sclk_fall = ~sclk_r & sclk_d;   // sclk_r just went 1 -> 0 (SHIFT,  CPHA=0)
 
-    // ---- FSM ----
+    // FSM ststes
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             state     <= IDLE;
@@ -133,5 +132,4 @@ module spi_master #(
     end
 
 endmodule
-
 
