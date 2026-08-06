@@ -65,5 +65,4 @@ The transmitted and received data matched successfully.
 
 # Simulation Waveform
 ![SPI Waveform](waveform.png)
-
-
+![SPI Waveform](waveform1.png)
