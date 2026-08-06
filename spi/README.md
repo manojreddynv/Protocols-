@@ -16,9 +16,9 @@ The functionality has been verified using simulation and waveform analysis in ED
 
 # Project Files
 SPI/
-├── spi_master.v      // SPI Master RTL
-├── spi_tb.v          // Testbench with simulated SPI Slave
-├── waveform.png      // Simulation waveform
+├── spi_master.v      
+├── spi_tb.v        
+├── waveform.png      
 └── README.md
 
 # SPI Timing
